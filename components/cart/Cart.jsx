@@ -15,7 +15,7 @@ import axios from "axios";
 import getStripe from "../../lib/getStripe";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api/",
+  baseURL: "/api/",
   headers: { "Content-Type": "application/json" },
 });
 
