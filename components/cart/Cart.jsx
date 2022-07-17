@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-
+import { toast } from "react-hot-toast";
 import { useStateContext } from "../../context/StateContext";
 import {
   AiOutlineShopping,
@@ -11,6 +11,13 @@ import { TiDeleteOutline } from "react-icons/ti";
 import Link from "next/link";
 import { urlFor } from "../../lib/client";
 import { Action } from "../../util/Constants";
+import axios from "axios";
+import getStripe from "../../lib/getStripe";
+
+const axiosInstance = axios.create({
+  baseURL: "http://localhost:3000/api/",
+  headers: { "Content-Type": "application/json" },
+});
 
 const Cart = () => {
   const cartRef = useRef();
@@ -23,6 +30,26 @@ const Cart = () => {
     toggleCartItemQuantity,
     onRemoveItem,
   } = useStateContext();
+
+  const handleCheckout = async () => {
+    const stripe = await getStripe();
+
+    console.log("cart items ", cartItems, JSON.stringify(cartItems));
+
+    const response = await axiosInstance.post("/stripe", {
+      data: cartItems,
+    });
+
+    if (response.status === 500) return;
+
+    console.log("Response: ", response);
+
+    const data = await response.data;
+
+    toast.loading("Redirecting...");
+
+    stripe.redirectToCheckout({ sessionId: data.id });
+  };
 
   return (
     <div className="cart-wrapper" ref={cartRef}>
@@ -105,7 +132,7 @@ const Cart = () => {
               <h3>${totalPrice}</h3>
             </div>
             <div className="btn-container">
-              <button type="button" className="btn">
+              <button type="button" className="btn" onClick={handleCheckout}>
                 Pay with Stripe
               </button>
             </div>
